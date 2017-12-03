@@ -104,4 +104,78 @@ namespace model
             make_viewport_mapper(data.world_mapper)
         );
     }
+
+    inline static RECT xyxy(const plot::viewport & vp, const plot::rect < double > & r)
+    {
+        return
+        {
+            vp.world_to_screen().x(r.xmin),
+            vp.world_to_screen().y(r.ymin),
+            vp.world_to_screen().x(r.xmax),
+            vp.world_to_screen().y(r.ymax)
+        };
+    }
+
+    inline static plot::painter_t make_system_painter(parameters & params)
+    {
+        return [&] (CDC & dc, const plot::viewport & vp)
+        {
+            auto metal_brush       = plot::palette::brush(RGB(100, 100, 100));
+            auto heat_source_brush = plot::palette::brush(RGB(100, 100, 100));
+
+            RECT r;
+
+            // heat source
+            r = xyxy(vp,
+            {
+                params.z_h - params.L_h / 2,
+                params.z_h + params.L_h / 2,
+                0,
+                params.R_h
+            });
+            dc.FillRect(&r, heat_source_brush.get());
+
+            // ring
+            if (params.z_c > 0)
+            {
+                r = xyxy(vp,
+                {
+                    params.z_c - params.L_c / 2,
+                    params.z_c + params.L_c / 2,
+                    params.R + params.d,
+                    params.R + params.d + params.d_c
+                });
+                dc.FillRect(&r, metal_brush.get());
+            }
+
+            // metal
+
+            r = xyxy(vp,
+            {
+                0,
+                params.d,
+                0,
+                params.R
+            });
+            dc.FillRect(&r, metal_brush.get());
+
+            r = xyxy(vp,
+            {
+                params.L + params.d,
+                params.L + 2 * params.d,
+                0,
+                params.R
+            });
+            dc.FillRect(&r, metal_brush.get());
+
+            r = xyxy(vp,
+            {
+                0,
+                params.L + 2 * params.d,
+                params.R,
+                params.R + params.d
+            });
+            dc.FillRect(&r, metal_brush.get());
+        };
+    }
 }
