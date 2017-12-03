@@ -67,7 +67,12 @@ BOOL CHeatDlg::OnInitDialog()
 
     adjust(m_cParams, m_cPlotData);
     m_cPlot.plot_layer.with(make_root_drawable(m_cPlotData, {
+        custom_drawable::create(make_system_painter(m_cParams))
     }));
+
+    m_cPlot.background = palette::brush();
+
+    m_cPlot.RedrawWindow();
 
     return TRUE;  // return TRUE  unless you set the focus to a control
 }
