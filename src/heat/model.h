@@ -73,4 +73,34 @@ namespace model
         }
         params.dr = params.dz = min(params.d_c, params.d) / 2;
     }
+
+    inline static plot::drawable::ptr_t make_root_drawable
+    (
+        const plot_data & data,
+        std::vector < plot::drawable::ptr_t > layers
+    )
+    {
+        using namespace plot;
+
+        layers.insert(layers.begin(), data.plot);
+
+        return viewporter::create(
+            tick_drawable::create(
+                layer_drawable::create(layers),
+                const_n_tick_factory<axe::x>::create(
+                    make_simple_tick_formatter(2, 5),
+                    0,
+                    5
+                ),
+                const_n_tick_factory<axe::y>::create(
+                    make_simple_tick_formatter(2, 5),
+                    0,
+                    5
+                ),
+                palette::pen(RGB(80, 80, 80)),
+                RGB(200, 200, 200)
+            ),
+            make_viewport_mapper(data.world_mapper)
+        );
+    }
 }
