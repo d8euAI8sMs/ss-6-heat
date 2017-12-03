@@ -83,7 +83,7 @@ namespace model
     {
         using namespace plot;
 
-        layers.insert(layers.begin(), data.plot);
+        layers.push_back(data.plot);
 
         return viewporter::create(
             tick_drawable::create(
