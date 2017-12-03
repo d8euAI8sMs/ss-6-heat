@@ -15,7 +15,7 @@ namespace model
         double R_h, L_h, z_h, P_h;
 
         // other params
-        double dt;
+        double dt, dr, dz;
     };
 
     inline static parameters make_default_parameters()
