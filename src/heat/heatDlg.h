@@ -36,4 +36,5 @@ public:
     afx_msg void OnBnClickedButton2();
     PlotStatic m_cPlot;
     model::parameters m_cParams;
+    model::plot_data m_cPlotData;
 };

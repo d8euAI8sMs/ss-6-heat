@@ -21,6 +21,7 @@ using namespace model;
 CHeatDlg::CHeatDlg(CWnd* pParent /*=NULL*/)
     : CSimulationDialog(CHeatDlg::IDD, pParent)
     , m_cParams(make_default_parameters())
+    , m_cPlotData(make_plot_data())
 {
     m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -63,6 +64,10 @@ BOOL CHeatDlg::OnInitDialog()
     SetIcon(m_hIcon, FALSE);        // Set small icon
 
     // TODO: Add extra initialization here
+
+    adjust(m_cParams, m_cPlotData);
+    m_cPlot.plot_layer.with(make_root_drawable(m_cPlotData, {
+    }));
 
     return TRUE;  // return TRUE  unless you set the focus to a control
 }
