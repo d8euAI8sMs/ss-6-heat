@@ -1,0 +1,16 @@
+version: '{build}'
+
+image:
+  - Visual Studio 2013
+
+configuration:
+  - Release
+
+install:
+  - git submodule update --init --recursive
+
+build:
+  project: src\heat\wave-packet.sln
+
+artifacts:
+  - path: 'src\heat\%CONFIGURATION%\heat.exe'
