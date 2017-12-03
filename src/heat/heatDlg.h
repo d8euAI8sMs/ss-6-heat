@@ -4,6 +4,9 @@
 #pragma once
 
 #include <util/common/gui/SimulationDialog.h>
+#include <util/common/plot/PlotStatic.h>
+
+#include "model.h"
 
 // CHeatDlg dialog
 class CHeatDlg : public CSimulationDialog
@@ -28,4 +31,9 @@ protected:
     afx_msg void OnPaint();
     afx_msg HCURSOR OnQueryDragIcon();
     DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnBnClickedButton1();
+    afx_msg void OnBnClickedButton2();
+    PlotStatic m_cPlot;
+    model::parameters m_cParams;
 };

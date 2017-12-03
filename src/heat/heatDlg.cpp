@@ -13,10 +13,14 @@
 
 // CHeatDlg dialog
 
+using namespace plot;
+using namespace util;
+using namespace model;
 
 
 CHeatDlg::CHeatDlg(CWnd* pParent /*=NULL*/)
     : CSimulationDialog(CHeatDlg::IDD, pParent)
+    , m_cParams(make_default_parameters())
 {
     m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -24,11 +28,26 @@ CHeatDlg::CHeatDlg(CWnd* pParent /*=NULL*/)
 void CHeatDlg::DoDataExchange(CDataExchange* pDX)
 {
     CSimulationDialog::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_PLOT, m_cPlot);
+    DDX_Text(pDX, IDC_EDIT1, m_cParams.R);
+    DDX_Text(pDX, IDC_EDIT2, m_cParams.L);
+    DDX_Text(pDX, IDC_EDIT3, m_cParams.d);
+    DDX_Text(pDX, IDC_EDIT4, m_cParams.R_h);
+    DDX_Text(pDX, IDC_EDIT5, m_cParams.L_h);
+    DDX_Text(pDX, IDC_EDIT12, m_cParams.z_h);
+    DDX_Text(pDX, IDC_EDIT6, m_cParams.P_h);
+    DDX_Text(pDX, IDC_EDIT7, m_cParams.d_c);
+    DDX_Text(pDX, IDC_EDIT8, m_cParams.L_c);
+    DDX_Text(pDX, IDC_EDIT9, m_cParams.z_c);
+    DDX_Text(pDX, IDC_EDIT10, m_cParams.dt);
+    DDX_Text(pDX, IDC_EDIT11, m_cParams.lambda_m);
 }
 
 BEGIN_MESSAGE_MAP(CHeatDlg, CSimulationDialog)
     ON_WM_PAINT()
     ON_WM_QUERYDRAGICON()
+    ON_BN_CLICKED(IDC_BUTTON1, &CHeatDlg::OnBnClickedButton1)
+    ON_BN_CLICKED(IDC_BUTTON2, &CHeatDlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 
 
@@ -82,4 +101,18 @@ void CHeatDlg::OnPaint()
 HCURSOR CHeatDlg::OnQueryDragIcon()
 {
     return static_cast<HCURSOR>(m_hIcon);
+}
+
+
+void CHeatDlg::OnBnClickedButton1()
+{
+    UpdateData(TRUE);
+
+    StartSimulationThread();
+}
+
+
+void CHeatDlg::OnBnClickedButton2()
+{
+    StopSimulationThread();
 }
