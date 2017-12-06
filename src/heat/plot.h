@@ -72,6 +72,8 @@ namespace plot
 
             for each (auto & data in *multidata)
             {
+                if (data.empty()) continue;
+
                 dc.MoveTo(bounds.world_to_screen().xy(util::get_mapped_value_or_default(data_mapper, data, (_iterator_t)data.begin(), 0)));
 
                 size_t idx = 0;
