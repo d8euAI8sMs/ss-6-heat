@@ -2,8 +2,13 @@
 
 #include <vector>
 
-#include <util/common/plot/drawable.h>
 #include <util/common/ptr.h>
+#include <util/common/iterable.h>
+#include <util/common/plot/palette.h>
+#include <util/common/plot/drawable.h>
+#include <util/common/plot/data_source.h>
+#include <util/common/plot/custom_drawable.h>
+#include <util/common/plot/utility.h>
 
 namespace plot
 {
