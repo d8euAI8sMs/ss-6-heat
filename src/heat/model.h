@@ -1,5 +1,7 @@
 #pragma once
 
+#include <util/common/plot/plot.h>
+
 #include "plot.h"
 
 namespace model
