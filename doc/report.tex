@@ -257,6 +257,55 @@
                     \delta^2_z \qty(T^n_{i,j} + T^{n*}_{i,j})
                 ) \\ &+ \frac{\tau}{4} \qty(Q^n_{i,j} + Q^{n*}_{i,j})
             \end{aligned}\end{equation}
+            %
+            Несложно показать, что имеет место
+            %
+            \begin{equation}\begin{aligned}
+                A^*_{i,j} T^{n*}_{i-1,j} +
+                B^*_{i,j} T^{n*}_{i+1,j} +
+                C^*_{i,j} T^{n*}_{i,j}   = D^*_{i,j} \\
+                A_{i,j} T^n_{i,j-1} +
+                B_{i,j} T^n_{i,j+1} +
+                C_{i,j} T^n_{i,j}   = D_{i,j} ,
+            \end{aligned}\end{equation}
+            %
+            где коэффициенты имеют вид:
+            %
+            \begin{equation}\begin{aligned}
+                A^*_{i,j}
+                    &= - \frac{\lambda^2 \tau}{4} \qty(
+                        \frac{1}{\Delta^2_r} - \frac{1}{2 r_i \Delta_r}
+                    ) ; \quad
+                B^*_{i,j}
+                    = - \frac{\lambda^2 \tau}{4} \qty(
+                        \frac{1}{\Delta^2_r} + \frac{1}{2 r_i \Delta_r}
+                    ) ; \quad
+                C^*_{i,j}
+                    = 1 + \frac{\lambda^2 \tau}{2 \Delta^2_r} \\
+                D^*_{i,j}
+                    &= T^{n-1}_{i,j}
+                        + \frac{\lambda^2 \tau}{4} \qty(
+                            \delta^2_r T^{n-1}_{i,j} +
+                            \frac{1}{r_i} \delta_r T^{n-1}_{i,j} +
+                            2 \delta^2_z T^{n-1}_{i,j}
+                        )
+                        + \frac{\tau}{4} \qty(Q^{n*}_{i,j} + Q^{n-1}_{i,j}) \\
+                A_{i,j}
+                    &= - \frac{\lambda^2 \tau}{4 \Delta^2_z} ; \quad
+                B_{i,j}
+                    = - \frac{\lambda^2 \tau}{4 \Delta^2_z} ; \quad
+                C_{i,j}
+                    = 1 + \frac{\lambda^2 \tau}{2 \Delta^2_z} \\
+                D_{i,j}
+                    &= T^{n*}_{i,j}
+                        + \frac{\lambda^2 \tau}{4} \qty(
+                            2 \delta^2_r T^{n*}_{i,j} +
+                            \frac{2}{r_i} \delta_r T^{n*}_{i,j} +
+                            \delta^2_z T^{n*}_{i,j}
+                        )
+                        + \frac{\tau}{4} \qty(Q^{n}_{i,j} + Q^{n*}_{i,j})
+            \end{aligned}\end{equation}
+            %
 
     %
     %
