@@ -157,7 +157,7 @@ void CHeatDlg::OnSimulation()
     {
         chasing_solve(d, m_cParams, T);
         m_cPlotData.data->clear();
-        find_isolines(T, 10, *m_cPlotData.data, d.n, d.m, m_cParams, m_cIsotermsToDisplay);
+        find_isolines(T, 10, *m_cPlotData.data, d.n, d.m, m_cParams, make_material_based_stencil(d), m_cIsotermsToDisplay);
         m_cPlot.RedrawBuffer();
         m_cPlot.SwapBuffers();
         Invoke([&] () { m_cPlot.RedrawWindow(); });
