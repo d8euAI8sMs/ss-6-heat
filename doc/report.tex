@@ -229,7 +229,9 @@
         %
         %
 
-        \subsection{Неявная схема переменных направлений}
+        \subsection{Неявная схема переменных направлений\protect\footnotemark}
+
+            \footnotetext{\foreignlanguage{english}{ADI Method~--- Alternating Direction Implicit Method}}
 
             Воспользуемся формулой трапеций для вычисления \autoref{eq:heat_eq_discrete_int}:
             %
@@ -306,6 +308,8 @@
                         + \frac{\tau}{4} \qty(Q^{n}_{i,j} + Q^{n*}_{i,j})
             \end{aligned}\end{equation}
             %
+
+            Отметим, что неявная схема также получается, если для интегрирования уравнения теплопроводности применить метод правых прямоугольников.
 
     %
     %
