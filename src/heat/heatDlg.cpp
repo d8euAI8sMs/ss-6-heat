@@ -22,6 +22,10 @@ CHeatDlg::CHeatDlg(CWnd* pParent /*=NULL*/)
     : CSimulationDialog(CHeatDlg::IDD, pParent)
     , m_cParams(make_default_parameters())
     , m_cPlotData(make_plot_data())
+    , m_cIsotermsToDisplay(10)
+    , m_cMaxTToDisplay(100)
+    , m_cDisplayHeatMap(TRUE)
+    , m_cDisplayHeatMapBool(true)
 {
     m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -42,6 +46,9 @@ void CHeatDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT9, m_cParams.z_c);
     DDX_Text(pDX, IDC_EDIT10, m_cParams.dt);
     DDX_Text(pDX, IDC_EDIT11, m_cParams.lambda_m);
+    DDX_Text(pDX, IDC_EDIT13, m_cIsotermsToDisplay);
+    DDX_Text(pDX, IDC_EDIT14, m_cMaxTToDisplay);
+    DDX_Check(pDX, IDC_CHECK1, m_cDisplayHeatMap);
 }
 
 BEGIN_MESSAGE_MAP(CHeatDlg, CSimulationDialog)
@@ -49,6 +56,7 @@ BEGIN_MESSAGE_MAP(CHeatDlg, CSimulationDialog)
     ON_WM_QUERYDRAGICON()
     ON_BN_CLICKED(IDC_BUTTON1, &CHeatDlg::OnBnClickedButton1)
     ON_BN_CLICKED(IDC_BUTTON2, &CHeatDlg::OnBnClickedButton2)
+    ON_BN_CLICKED(IDC_CHECK1, &CHeatDlg::OnBnClickedCheck1)
 END_MESSAGE_MAP()
 
 
@@ -125,4 +133,10 @@ void CHeatDlg::OnBnClickedButton1()
 void CHeatDlg::OnBnClickedButton2()
 {
     StopSimulationThread();
+}
+
+void CHeatDlg::OnBnClickedCheck1()
+{
+    UpdateData(TRUE);
+    this->m_cDisplayHeatMapBool = (this->m_cDisplayHeatMap != 0);
 }

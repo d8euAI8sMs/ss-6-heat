@@ -37,4 +37,9 @@ public:
     PlotStatic m_cPlot;
     model::parameters m_cParams;
     model::plot_data m_cPlotData;
+    int m_cIsotermsToDisplay;
+    double m_cMaxTToDisplay;
+    BOOL m_cDisplayHeatMap;
+    bool m_cDisplayHeatMapBool;
+    afx_msg void OnBnClickedCheck1();
 };
