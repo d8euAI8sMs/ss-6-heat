@@ -236,7 +236,7 @@ namespace model
 
         size_t d_n  = (size_t) std::ceil(p.d / p.dr);
         size_t d_m  = (size_t) std::ceil(p.d / p.dz);
-        size_t h_j1 = (size_t) std::ceil((p.z_h - p.L_h / 2) / p.dr);
+        size_t h_j1 = (size_t) std::ceil((p.z_h - p.L_h / 2) / p.dz);
         size_t h_j2 = (size_t) std::ceil((p.z_h + p.L_h / 2) / p.dz);
         size_t h_n  = (size_t) std::ceil(p.R_h / p.dr);
 
