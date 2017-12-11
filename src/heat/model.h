@@ -355,15 +355,22 @@ namespace model
                     if (horizontal)
                     {
                         // handle external boundary conditions
-                        if (((m = get_material_at(d, { (int) i - 1, (int) j })) & material::ext)
+                        if (i == 0)
+                        {
+                            // radial symmetry of the system
+                            return { 0, -1, 1, 0 };
+                        }
+                        else if (((m = get_material_at(d, { (int) i - 1, (int) j })) & material::ext)
                             || corner && (std::get<0>(nearest) & material::ext))
                         {
-                            return { 0, -1, 1, 0 };
+                            // radiation
+                            return { 0, -1, 1, - p.sigma * T[i][j] * T[i][j] * T[i][j] * T[i][j] };
                         }
                         else if (((m = get_material_at(d, { (int) i + 1, (int) j })) & material::ext)
                                  || corner && (std::get<1>(nearest) & material::ext))
                         {
-                            return { -1, 0, 1, 0 };
+                            // radiation
+                            return { -1, 0, 1, - p.sigma * T[i][j] * T[i][j] * T[i][j] * T[i][j] };
                         }
                         // handle internal boundary conditions
                         else
@@ -393,12 +400,14 @@ namespace model
                         if (((m = get_material_at(d, { (int) i, (int) j - 1 })) & material::ext)
                             || corner && (std::get<0>(nearest) & material::ext))
                         {
-                            return { 0, -1, 1, 0 };
+                            // radiation
+                            return { 0, -1, 1, - p.sigma * T[i][j] * T[i][j] * T[i][j] * T[i][j] };
                         }
                         else if (((m = get_material_at(d, { (int) i, (int) j + 1 })) & material::ext)
                                  || corner && (std::get<1>(nearest) & material::ext))
                         {
-                            return { -1, 0, 1, 0 };
+                            // radiation
+                            return { -1, 0, 1, - p.sigma * T[i][j] * T[i][j] * T[i][j] * T[i][j] };
                         }
                         // handle internal boundary conditions
                         else
