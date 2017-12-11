@@ -143,7 +143,7 @@ namespace
         }
         if (has_diag && (except != side::diagonal)) return side::diagonal;
 
-        throw std::exception("unexpected");
+        return except;
     }
 
     inline void side_to_point
