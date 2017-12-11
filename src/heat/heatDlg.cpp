@@ -142,6 +142,31 @@ void CHeatDlg::OnBnClickedButton2()
     StopSimulationThread();
 }
 
+void CHeatDlg::OnSimulation()
+{
+    adjust(m_cParams, m_cPlotData);
+
+    auto & d = m_cChasingData;
+
+    make_chasing_data(d, m_cParams);
+
+    T.clear();
+    T.resize(d.n, std::vector < double > (d.m));
+
+    while (m_bWorking)
+    {
+        chasing_solve(d, m_cParams, T);
+        m_cPlotData.data->clear();
+        find_isolines(T, 10, *m_cPlotData.data, d.n, d.m, m_cParams, m_cIsotermsToDisplay);
+        m_cPlot.RedrawBuffer();
+        m_cPlot.SwapBuffers();
+        Invoke([&] () { m_cPlot.RedrawWindow(); });
+    }
+
+    CSimulationDialog::OnSimulation();
+}
+
+
 void CHeatDlg::OnBnClickedCheck1()
 {
     UpdateData(TRUE);

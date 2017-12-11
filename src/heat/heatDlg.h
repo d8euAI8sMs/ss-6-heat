@@ -32,6 +32,7 @@ protected:
     afx_msg HCURSOR OnQueryDragIcon();
     DECLARE_MESSAGE_MAP()
 public:
+    virtual void OnSimulation();
     afx_msg void OnBnClickedButton1();
     afx_msg void OnBnClickedButton2();
     PlotStatic m_cPlot;
