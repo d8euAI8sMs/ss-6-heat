@@ -245,15 +245,15 @@ void model::find_isolines
                     double T0 = (b + (int) k) * dT;
 
                     /* o == 0 type */
-                    if (is_in_range(T0, T[i][j], T[i + 1][j]) ||
-                        is_in_range(T0, T[i][j], T[i][j + 1]))
+                    if (stencil(i + 1, j) && is_in_range(T0, T[i][j], T[i + 1][j]) ||
+                        stencil(i, j + 1) && is_in_range(T0, T[i][j], T[i][j + 1]))
                     {
                         stack.emplace_back((b + (int) k), triangle { i, j, 0 });
                     }
 
                     /* o == 1 type */
-                    if (is_in_range(T0, T[i][j + 1], T[i + 1][j + 1]) ||
-                        is_in_range(T0, T[i + 1][j], T[i + 1][j + 1]))
+                    if (stencil(i + 1, j + 1) && stencil(i, j + 1) && is_in_range(T0, T[i][j + 1], T[i + 1][j + 1]) ||
+                        stencil(i + 1, j) && stencil(i + 1, j + 1) && is_in_range(T0, T[i + 1][j], T[i + 1][j + 1]))
                     {
                         stack.emplace_back((b + (int) k), triangle { i, j, 1 });
                     }
@@ -297,9 +297,9 @@ void model::find_isolines
 
             if (t.o == 0)
             {
-                bool has_left = is_in_range(T0, T[i][j], T[i + 1][j]);
-                bool has_top  = is_in_range(T0, T[i][j], T[i][j + 1]);
-                bool has_diag = is_in_range(T0, T[i + 1][j], T[i][j + 1]);
+                bool has_left = stencil(i + 1, j) && is_in_range(T0, T[i][j], T[i + 1][j]);
+                bool has_top  = stencil(i, j + 1) && is_in_range(T0, T[i][j], T[i][j + 1]);
+                bool has_diag = stencil(i + 1, j) && stencil(i, j + 1) && is_in_range(T0, T[i + 1][j], T[i][j + 1]);
 
                 if (stencil(i, (int) j - 1) && has_left && (std::get < 0 > (visited[i][j - 1][1]) != owning_type::our))
                 {
@@ -320,9 +320,9 @@ void model::find_isolines
             }
             else
             {
-                bool has_right  = is_in_range(T0, T[i][j + 1], T[i + 1][j + 1]);
-                bool has_bottom = is_in_range(T0, T[i + 1][j], T[i + 1][j + 1]);
-                bool has_diag   = is_in_range(T0, T[i + 1][j], T[i][j + 1]);
+                bool has_right  = stencil(i, j + 1) && stencil(i + 1, j + 1) && is_in_range(T0, T[i][j + 1], T[i + 1][j + 1]);
+                bool has_bottom = stencil(i + 1, j) && stencil(i + 1, j + 1) && is_in_range(T0, T[i + 1][j], T[i + 1][j + 1]);
+                bool has_diag   = stencil(i + 1, j) && stencil(i, j + 1) && is_in_range(T0, T[i + 1][j], T[i][j + 1]);
 
                 if (stencil(i, j + 2) && has_right && (std::get < 0 > (visited[i][j + 1][0]) != owning_type::our))
                 {
