@@ -440,10 +440,15 @@ namespace model
                 }
             }
             // deal with ordinary space
-            else
+            else if (!(get_material_at(d, { (int) i, (int) j }) & material::ext))
             {
                 auto p1 = get_material_props(p, get_material_at(d, { (int) i, (int) j }));
                 return make_normal_coefs(i, j, dir, p1.first, p1.second);
+            }
+            // will not anyhow be used
+            else
+            {
+                return { 0, 0, 1, 0 };
             }
         };
     }
@@ -526,7 +531,7 @@ namespace model
             while (get_material_at(d, { (int) e, (int) j }) & material::ext) ++e;
             for (size_t i = s + 2; i-- > e + 1;)
             {
-                if ((i + 1) > d.n)
+                if (get_material_at(d, { (int) i, (int) j }) & material::ext)
                 {
                     T[i - 1][j] = b[i][j];
                 }
@@ -560,7 +565,7 @@ namespace model
             while (get_material_at(d, { (int) i, (int) e }) & material::ext) ++e;
             for (size_t j = s + 2; j-- > e + 1;)
             {
-                if ((j + 1) > d.m)
+                if (get_material_at(d, { (int) i, (int) j }) & material::ext)
                 {
                     T[i][j - 1] = b[i][j];
                 }
