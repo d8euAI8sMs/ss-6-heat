@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <util/common/plot/plot.h>
 
 #include "plot.h"
@@ -186,6 +188,427 @@ namespace model
             });
             dc.FillRect(&r, metal_brush.get());
         };
+    }
+
+    struct chasing_data;
+
+    enum class chasing_dir
+    {
+        i, j
+    };
+
+    struct chasing_coefs
+    {
+        double A, B, C, D;
+    };
+
+    using chasing_fn = std::function < chasing_coefs (size_t i, size_t j, chasing_dir dir,
+                                                      const chasing_data & d,
+                                                      const parameters & p,
+                                                      std::vector < std::vector < double > > & T) > ;
+
+    using material_t = size_t;
+
+    namespace material
+    {
+        const material_t border_i = 0x1 << 0;
+        const material_t border_j = 0x1 << 1;
+        const material_t ext      = 0x1 << 4;
+        const material_t metal    = 0x1 << 5;
+        const material_t heater   = 0x1 << 6;
+        const material_t liquid   = 0x1 << 7;
+
+        const material_t border   = border_i | border_j;
+        const material_t flags    = border;
+        const material_t no_flags = ~flags;
+    };
+
+    struct chasing_data
+    {
+        std::vector < std::vector < material_t > > area_map;
+        std::vector < std::vector < double > > heat_src;
+        chasing_fn coefs;
+        size_t n, m;
+    };
+
+    inline material_t get_material_at(const chasing_data & d,
+                                      const plot::point < int > & p,
+                                      bool preserve_flags = true)
+    {
+        return ((p.x < 0) || (p.x >= d.n) || (p.y < 0) || (p.y >= d.m))
+            ? material::ext
+            : (preserve_flags ? d.area_map[p.x][p.y]
+                              : (d.area_map[p.x][p.y] & material::no_flags));
+    }
+
+    inline std::array < material_t, 2 > get_nearest_materials(const chasing_data & d,
+                                                              const plot::point < int > & p,
+                                                              chasing_dir dir)
+    {
+        material_t m1, m2;
+
+        if (dir == chasing_dir::i)
+        {
+            return {{ get_material_at(d, { p.x - 1, p.y }), get_material_at(d, { p.x + 1, p.y }) }};
+        }
+        else
+        {
+            return {{ get_material_at(d, { p.x, p.y - 1 }), get_material_at(d, { p.x, p.y + 1 }) }};
+        }
+    }
+
+    inline std::pair < double, double > get_material_props(const parameters & p,
+                                                           material_t m)
+    {
+        switch (m & material::no_flags)
+        {
+        case model::material::metal:
+            return { p.c_m, p.k_m };
+        case model::material::heater:
+            return { p.c_h, p.k_h };
+        case model::material::liquid:
+            return { p.c_l, p.k_l };
+        default:
+            return { 0, 0 };
+        }
+    }
+
+    inline bool is_in_rect(const plot::point < size_t > & p,
+                           const plot::rect < size_t > & r)
+    {
+        return (r.xmin <= p.x) && (p.x <= r.xmax)
+            && (r.ymin <= p.y) && (p.y <= r.ymax);
+    }
+
+    inline void make_chasing_data(chasing_data & d, const parameters & p)
+    {
+        d.n = (size_t) std::ceil((p.R + p.d) / p.dr) + 1;
+        d.m = (size_t) std::ceil((p.L + 2 * p.d) / p.dz) + 1;
+
+        d.area_map.resize(d.n, std::vector < material_t > (d.m));
+        d.heat_src.resize(d.n, std::vector < double > (d.m));
+
+        size_t d_n  = (size_t) std::ceil(p.d / p.dr);
+        size_t d_m  = (size_t) std::ceil(p.d / p.dz);
+        size_t h_j1 = (size_t) std::ceil((p.z_h - p.L_h / 2) / p.dr);
+        size_t h_j2 = (size_t) std::ceil((p.z_h + p.L_h / 2) / p.dz);
+        size_t h_n  = (size_t) std::ceil(p.R_h / p.dr);
+
+        // set up materials and sketch out borders
+
+        for (size_t i = 0; i < d.n; ++i)
+        {
+            for (size_t j = 0; j < d.m; ++j)
+            {
+                bool is_border        = ((i == 0) || ((i + 1) == d.n)
+                                      || (j == 0) || ((j + 1) == d.m));
+                bool is_heater        = is_in_rect({ i, j }, { 0, h_n, h_j1, h_j2 });// && !((i == h_n) && ((j == h_j1) || (j == h_j2)));
+                bool is_heater_border = is_heater && !is_in_rect({ i, j }, { 1, h_n - 1, h_j1 + 1, h_j2 - 1 });
+                bool is_liquid        = is_in_rect({ i, j }, { 0, d.n - d_n - 1, d_m, d.m - d_m - 1 });
+                bool is_liquid_border = is_liquid && !is_in_rect({ i, j }, { 1, d.n - d_n - 2, d_m + 1, d.m - d_m - 2 });
+
+                if (is_border || is_heater_border || is_liquid_border)
+                                    d.area_map[i][j]  = material::border;
+                     if (is_heater) d.area_map[i][j] |= material::heater;
+                else if (is_liquid) d.area_map[i][j] |= material::liquid;
+                else                d.area_map[i][j] |= material::metal;
+
+                if (is_heater) d.heat_src[i][j] = p.P_h;
+            }
+        }
+
+        // detect border orientations
+
+        for (size_t i = 0; i < d.n; ++i)
+        {
+            for (size_t j = 0; j < d.m; ++j)
+            {
+                if (get_material_at(d, { (int) i, (int) j }) & material::border)
+                {
+                    d.area_map[i][j] &= ~material::border;
+                    if ((get_material_at(d, { (int) i - 1, (int) j })
+                        | get_material_at(d, { (int) i + 1, (int) j })) & material::border)
+                    {
+                        d.area_map[i][j] |= material::border_j;
+                    }
+                    if ((get_material_at(d, { (int) i, (int) j - 1 })
+                        | get_material_at(d, { (int) i, (int) j + 1 })) & material::border)
+                    {
+                        d.area_map[i][j] |= material::border_i;
+                    }
+                }
+            }
+        }
+
+        d.coefs = [&] (size_t i, size_t j, chasing_dir dir,
+                       const chasing_data & d,
+                       const parameters & p,
+                       std::vector < std::vector < double > > & T) -> chasing_coefs
+        {
+            // make ordinary A B C D coefficients
+            auto make_normal_coefs = [&] (
+                size_t i, size_t j, chasing_dir s,
+                double c, double k) -> chasing_coefs
+            {
+                double lambda = std::sqrt(k * p.c_l / p.k_l / c) * p.lambda_m;
+
+                bool is_ext_i = (get_material_at(d, { (int) i - 1, ( int) j })
+                                 | get_material_at(d, { (int) i + 1, ( int) j })) & material::ext;
+                bool is_ext_j = (get_material_at(d, { (int) i, ( int) j - 1 })
+                                 | get_material_at(d, { (int) i, ( int) j + 1 })) & material::ext;
+
+                if (s == chasing_dir::i)
+                {
+                    return
+                    {
+                        - lambda * lambda * p.dt / 2. * (1 - 1. / 2. / i) / p.dr / p.dr,
+                        - lambda * lambda * p.dt / 2. * (1 + 1. / 2. / i) / p.dr / p.dr,
+                        1 + lambda * lambda * p.dt / 1. / p.dr / p.dr,
+                        T[i][j] + lambda * lambda * p.dt / 2. *
+                        (
+                            (is_ext_j ? 0 : ((T[i][j + 1] + T[i][j - 1] - 2 * T[i][j]) / p.dz / p.dz)) +
+                            // for now, examine it later
+                            (is_ext_i ? 0 : (0 * (
+                                (T[i + 1][j] + T[i - 1][j] - 2 * T[i][j]) / p.dr / p.dr +
+                                (T[i + 1][j] - T[i - 1][j]) / 2. / i / p.dr / p.dr
+                            )))
+                        ) + p.dt / 2. * d.heat_src[i][j]
+                    };
+                }
+                return
+                {
+                    - lambda * lambda * p.dt / 2. / p.dz / p.dz,
+                    - lambda * lambda * p.dt / 2. / p.dz / p.dz,
+                    1 + lambda * lambda * p.dt / 1. / p.dz / p.dz,
+                    T[i][j] + lambda * lambda * p.dt / 2. *
+                    (
+                        (is_ext_i ? 0 : ((T[i + 1][j] + T[i - 1][j] - 2 * T[i][j]) / p.dr / p.dr +
+                        (T[i + 1][j] - T[i - 1][j]) / 2. / i / p.dr / p.dr)) +
+                        // for now, examine it later
+                        (is_ext_j ? 0 : (0 * ((T[i][j + 1] + T[i][j - 1] - 2 * T[i][j]) / p.dz / p.dz)))
+                    ) + p.dt / 2. * d.heat_src[i][j]
+                };
+            };
+
+            // deal with boundary conditions
+            if (d.area_map[i][j] & material::border)
+            {
+                // determine border orientations
+                bool vertical   = d.area_map[i][j] & material::border_j;
+                bool horizontal = d.area_map[i][j] & material::border_i;
+                bool corner     = vertical && horizontal;
+
+                // detect materials the border divides
+                auto nearest = get_nearest_materials(d, { (int) i, (int) j }, dir);
+
+                material_t m;
+
+                if (dir == chasing_dir::i)
+                {
+                    // chasing direction is orthogonal to the border orientation
+                    if (horizontal)
+                    {
+                        // handle external boundary conditions
+                        if (((m = get_material_at(d, { (int) i - 1, (int) j })) & material::ext)
+                            || corner && (std::get<0>(nearest) & material::ext))
+                        {
+                            return { 0, -1, 1, 0 };
+                        }
+                        else if (((m = get_material_at(d, { (int) i + 1, (int) j })) & material::ext)
+                                 || corner && (std::get<1>(nearest) & material::ext))
+                        {
+                            return { -1, 0, 1, 0 };
+                        }
+                        // handle internal boundary conditions
+                        else
+                        {
+                            auto p1 = get_material_props(p, std::get<0>(nearest));
+                            auto p2 = get_material_props(p, std::get<1>(nearest));
+                            double k = p1.second / p2.second;
+                            return { -1, -k, (k + 1), 0 };
+                        }
+                    }
+                    // chasing direction coincides with the border orientation,
+                    // apply the ordinary equation instead of boundary conditions
+                    else
+                    {
+                        material_t m1 = get_material_at(d, { (int) i, (int) j - 1 });
+                        material_t m2 = get_material_at(d, { (int) i, (int) j + 1 });
+                        auto p1 = get_material_props(p, ((m1 != material::ext) ? m1 : m2));
+                        return make_normal_coefs(i, j, dir, p1.first, p1.second);
+                    }
+                }
+                else
+                {
+                    // chasing direction is orthogonal to the border orientation
+                    if (vertical)
+                    {
+                        // handle external boundary conditions
+                        if (((m = get_material_at(d, { (int) i, (int) j - 1 })) & material::ext)
+                            || corner && (std::get<0>(nearest) & material::ext))
+                        {
+                            return { 0, -1, 1, 0 };
+                        }
+                        else if (((m = get_material_at(d, { (int) i, (int) j + 1 })) & material::ext)
+                                 || corner && (std::get<1>(nearest) & material::ext))
+                        {
+                            return { -1, 0, 1, 0 };
+                        }
+                        // handle internal boundary conditions
+                        else
+                        {
+                            auto p1 = get_material_props(p, std::get<0>(nearest));
+                            auto p2 = get_material_props(p, std::get<1>(nearest));
+                            double k = p1.second / p2.second;
+                            return { -1, -k, (k + 1), 0 };
+                        }
+                    }
+                    // chasing direction coincides with the border orientation,
+                    // apply the ordinary equation instead of boundary conditions
+                    else
+                    {
+                        material_t m1 = get_material_at(d, { (int) i - 1, (int) j });
+                        material_t m2 = get_material_at(d, { (int) i + 1, (int) j });
+                        auto p1 = get_material_props(p, (!(m1 & material::ext) ? m1 : m2));
+                        return make_normal_coefs(i, j, dir, p1.first, p1.second);
+                    }
+                }
+            }
+            // deal with ordinary space
+            else
+            {
+                auto p1 = get_material_props(p, get_material_at(d, { (int) i, (int) j }));
+                return make_normal_coefs(i, j, dir, p1.first, p1.second);
+            }
+        };
+    }
+
+    // post-apply boundary conditions again
+    inline void chasing_bc
+    (
+        const chasing_data & d,
+        const parameters & p,
+        std::vector < std::vector < double > > & T
+    )
+    {
+        chasing_coefs c;
+
+        for (size_t i = 0; i < d.n; ++i)
+        {
+            for (size_t j = 0; j < d.m; ++j)
+            {
+                if (d.area_map[i][j] & material::border_i)
+                {
+                    if ((get_material_at(d, { (int) i - 1, (int) j })
+                        | get_material_at(d, { (int) i + 1, (int) j })) & material::ext)
+                    {
+                        c = d.coefs(i, j, chasing_dir::i, d, p, T);
+                        T[i][j] = c.D;
+                        if (!(get_material_at(d, { (int) i - 1, (int) j }) & material::ext))
+                            T[i][j] -= c.A * T[i - 1][j];
+                        if (!(get_material_at(d, { (int) i + 1, (int) j }) & material::ext))
+                            T[i][j] -= c.B * T[i + 1][j];
+                        T[i][j] /= c.C;
+                    }
+                    else if ((get_material_at(d, { (int) i, (int) j - 1 })
+                        | get_material_at(d, { (int) i, (int) j + 1 })) & material::ext)
+                    {
+                        c = d.coefs(i, j, chasing_dir::j, d, p, T);
+                        T[i][j] = c.D;
+                        if (!(get_material_at(d, { (int) i, (int) j - 1 }) & material::ext))
+                            T[i][j] -= c.A * T[i][j - 1];
+                        if (!(get_material_at(d, { (int) i, (int) j + 1 }) & material::ext))
+                            T[i][j] -= c.B * T[i][j + 1];
+                        T[i][j] /= c.C;
+                    }
+                }
+            }
+        }
+    }
+
+    inline void chasing_solve
+    (
+        const chasing_data & d,
+        const parameters & p,
+        std::vector < std::vector < double > > & T
+    )
+    {
+        std::vector < std::vector < double > > a(d.n + 1), b(d.n + 1);
+
+        for (size_t i = 0; i < d.n + 1; ++i)
+        {
+            a[i].resize(d.m + 1); b[i].resize(d.m + 1);
+        }
+
+        chasing_coefs c;
+
+        // i-chasing
+
+        for (size_t i = 0; i < d.n; ++i)
+        {
+            for (size_t j = 0; j < d.m; ++j)
+            {
+                c = d.coefs(i, j, chasing_dir::i, d, p, T);
+                a[i + 1][j] = - c.B / (c.C + c.A * a[i][j]);
+                b[i + 1][j] = (c.D - c.A * b[i][j]) / (c.C + c.A * a[i][j]);
+            }
+        }
+
+        for (size_t j = 0; j < d.m; ++j)
+        {
+            size_t s = d.n - 1, e = 0;
+            while (get_material_at(d, { (int) s, (int) j }) & material::ext) --s;
+            while (get_material_at(d, { (int) e, (int) j }) & material::ext) ++e;
+            for (size_t i = s + 2; i-- > e + 1;)
+            {
+                if ((i + 1) > d.n)
+                {
+                    T[i - 1][j] = b[i][j];
+                }
+                else
+                {
+                    T[i - 1][j] = a[i][j] * T[i][j] + b[i][j];
+                }
+            }
+        }
+
+        // boundary condition chasing
+
+        chasing_bc(d, p, T);
+
+        // j-chasing
+
+        for (size_t i = 0; i < d.n; ++i)
+        {
+            for (size_t j = 0; j < d.m; ++j)
+            {
+                c = d.coefs(i, j, chasing_dir::j, d, p, T);
+                a[i][j + 1] = - c.B / (c.C + c.A * a[i][j]);
+                b[i][j + 1] = (c.D - c.A * b[i][j]) / (c.C + c.A * a[i][j]);
+            }
+        }
+
+        for (size_t i = 0; i < d.n; ++i)
+        {
+            size_t s = d.m - 1, e = 0;
+            while (get_material_at(d, { (int) i, (int) s }) & material::ext) --s;
+            while (get_material_at(d, { (int) i, (int) e }) & material::ext) ++e;
+            for (size_t j = s + 2; j-- > e + 1;)
+            {
+                if ((j + 1) > d.m)
+                {
+                    T[i][j - 1] = b[i][j];
+                }
+                else
+                {
+                    T[i][j - 1] = a[i][j] * T[i][j] + b[i][j];
+                }
+            }
+        }
+
+        // boundary condition chasing
+
+        chasing_bc(d, p, T);
     }
 
     void find_isolines
