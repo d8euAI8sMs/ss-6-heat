@@ -225,7 +225,7 @@ namespace model
 
     inline void make_chasing_data(chasing_data & d, const parameters & p)
     {
-        d.n = (size_t) std::ceil((p.R + p.d) / p.dr) + 1;
+        d.n = (size_t) std::ceil((p.R + p.d + p.d_c) / p.dr) + 1;
         d.m = (size_t) std::ceil((p.L + 2 * p.d) / p.dz) + 1;
 
         d.area_map.clear();
@@ -234,11 +234,15 @@ namespace model
         d.area_map.resize(d.n, std::vector < material_t > (d.m));
         d.heat_src.resize(d.n, std::vector < double > (d.m));
 
+        size_t R_n  = (size_t) std::ceil(p.R / p.dr);
         size_t d_n  = (size_t) std::ceil(p.d / p.dr);
         size_t d_m  = (size_t) std::ceil(p.d / p.dz);
         size_t h_j1 = (size_t) std::ceil((p.z_h - p.L_h / 2) / p.dz);
         size_t h_j2 = (size_t) std::ceil((p.z_h + p.L_h / 2) / p.dz);
         size_t h_n  = (size_t) std::ceil(p.R_h / p.dr);
+        size_t c_j1 = (size_t) std::ceil((p.z_c - p.L_h / 2) / p.dz);
+        size_t c_j2 = (size_t) std::ceil((p.z_c + p.L_h / 2) / p.dz);
+        size_t c_n  = (size_t) std::ceil(p.d_c / p.dr);
 
         // set up materials and sketch out borders
 
@@ -246,18 +250,24 @@ namespace model
         {
             for (size_t j = 0; j < d.m; ++j)
             {
-                bool is_border        = ((i == 0) || ((i + 1) == d.n)
-                                      || (j == 0) || ((j + 1) == d.m));
+                bool is_border        = ((i == 0) || (i == (R_n + d_n)) && !((c_j1 < j) && (j < c_j2))
+                                      || ((j == 0) || ((j + 1) == d.m))) && (i <= R_n + d_n)
+                                      || (i == (d.n - 1)) && (((c_j1 < j) && (j < c_j2)))
+                                      || ((j == c_j1) || (j == c_j2)) && (((R_n + d_n) <= i) && (i <= (d.n - 1)));
                 bool is_heater        = is_in_rect({ i, j }, { 0, h_n, h_j1, h_j2 });
                 bool is_heater_border = is_heater && !is_in_rect({ i, j }, { 1, h_n - 1, h_j1 + 1, h_j2 - 1 });
-                bool is_liquid        = is_in_rect({ i, j }, { 0, d.n - d_n - 1, d_m, d.m - d_m - 1 });
-                bool is_liquid_border = is_liquid && !is_in_rect({ i, j }, { 1, d.n - d_n - 2, d_m + 1, d.m - d_m - 2 });
+                bool is_liquid        = is_in_rect({ i, j }, { 0, R_n, d_m, d.m - d_m - 1 });
+                bool is_liquid_border = is_liquid && !is_in_rect({ i, j }, { 1, R_n - 1, d_m + 1, d.m - d_m - 2 });
+                bool is_ring          = is_in_rect({ i, j }, { R_n + d_n, d.n - 1, c_j1, c_j2 });
+                bool is_metal         = is_in_rect({ i, j }, { 0, R_n + d_n, 0, d.m - 1 });
 
                 if (is_border || is_heater_border || is_liquid_border)
                                     d.area_map[i][j]  = material::border;
                      if (is_heater) d.area_map[i][j] |= material::heater;
                 else if (is_liquid) d.area_map[i][j] |= material::liquid;
-                else                d.area_map[i][j] |= material::metal;
+                else if (is_metal)  d.area_map[i][j] |= material::metal;
+                else if (is_ring)   d.area_map[i][j] |= material::metal;
+                else                d.area_map[i][j]  = material::ext;
 
                 if (is_heater) d.heat_src[i][j] = p.P_h;
             }
