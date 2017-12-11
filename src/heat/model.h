@@ -32,16 +32,19 @@ namespace model
         return
         {
             // cylinder params
-            1, 2.5, 0.05, 10,
+            50, 50, 15, 1,
 
             // ring params
-            0.05, 0.2, 0.5,
+            5, 20, 50,
 
             // heat source params
-            0.5, 0.1, 0.5, 1,
+            30, 15, 50, 1000,
 
             // other params
-            0.01
+            0.3, 0, 0,
+
+            // material params
+            1000, 0.6, 450, 92, 450, 12
         };
     }
 
