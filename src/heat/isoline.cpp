@@ -189,6 +189,7 @@ void model::find_isolines
     std::vector < std::vector < plot::point < double > > > & out,
     size_t n, size_t m,
     const parameters & p,
+    stencil_fn stencil,
     size_t max_isolines,
     size_t max_points_in_stack
 )
@@ -217,6 +218,7 @@ void model::find_isolines
     {
         for (size_t j = 0; j < m; ++j)
         {
+            if (!stencil(i, j)) continue;
             if (global_max_T < T[i][j]) global_max_T = T[i][j];
             if (global_min_T > T[i][j]) global_min_T = T[i][j];
         }
@@ -229,6 +231,8 @@ void model::find_isolines
         visited[i].resize(m);
         for (size_t j = 0; j < m - 1; ++j)
         {
+            if (!stencil(i, j)) continue;
+
             double max_T = min(global_max_T, max(max(T[i][j], T[i][j + 1]), max(T[i + 1][j], T[i + 1][j + 1])));
             double min_T = min(min(T[i][j], T[i][j + 1]), min(T[i + 1][j], T[i + 1][j + 1]));
             if (min_T < max_T)
@@ -297,11 +301,11 @@ void model::find_isolines
                 bool has_top  = is_in_range(T0, T[i][j], T[i][j + 1]);
                 bool has_diag = is_in_range(T0, T[i + 1][j], T[i][j + 1]);
 
-                if ((j > 0) && has_left && (std::get < 0 > (visited[i][j - 1][1]) != owning_type::our))
+                if (stencil(i, (int) j - 1) && has_left && (std::get < 0 > (visited[i][j - 1][1]) != owning_type::our))
                 {
                     t = { i, j - 1, 1 };
                 }
-                else if ((i > 0) && has_top && (std::get < 0 > (visited[i - 1][j][1]) != owning_type::our))
+                else if (stencil((int) i - 1, j) && has_top && (std::get < 0 > (visited[i - 1][j][1]) != owning_type::our))
                 {
                     t = { i - 1, j, 1 };
                 }
@@ -320,11 +324,11 @@ void model::find_isolines
                 bool has_bottom = is_in_range(T0, T[i + 1][j], T[i + 1][j + 1]);
                 bool has_diag   = is_in_range(T0, T[i + 1][j], T[i][j + 1]);
 
-                if ((j + 2 < m) && has_right && (std::get < 0 > (visited[i][j + 1][0]) != owning_type::our))
+                if (stencil(i, j + 2) && has_right && (std::get < 0 > (visited[i][j + 1][0]) != owning_type::our))
                 {
                     t = { i, j + 1, 0 };
                 }
-                else if ((i + 2 < n) && has_bottom && (std::get < 0 > (visited[i + 1][j][0]) != owning_type::our))
+                else if (stencil(i + 2, j) && has_bottom && (std::get < 0 > (visited[i + 1][j][0]) != owning_type::our))
                 {
                     t = { i + 1, j, 0 };
                 }

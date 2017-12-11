@@ -566,6 +566,18 @@ namespace model
         chasing_bc(d, p, T);
     }
 
+    using stencil_fn = std::function < bool (int i, int j) > ;
+
+    inline static stencil_fn make_simple_stencil(size_t n, size_t m)
+    {
+        return [=] (int i, int j) { return (i >= 0) && (j >= 0) && (i < n) && (j < m); };
+    }
+
+    inline static stencil_fn make_material_based_stencil(const chasing_data & d)
+    {
+        return [&] (int i, int j) { return !(get_material_at(d, { i, j }) & material::ext); };
+    }
+
     void find_isolines
     (
         const std::vector < std::vector < double > > & T,
@@ -573,6 +585,7 @@ namespace model
         std::vector < std::vector < plot::point < double > > > & out,
         size_t n, size_t m,
         const parameters & p,
+        stencil_fn stencil,
         size_t max_isolines = 100,
         size_t max_points_in_stack = 100000
     );
