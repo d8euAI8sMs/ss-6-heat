@@ -79,11 +79,14 @@ BOOL CHeatDlg::OnInitDialog()
     T.resize(m_cChasingData.n, std::vector < double > (m_cChasingData.m));
 
     m_cPlot.plot_layer.with(make_root_drawable(m_cPlotData, {
-        custom_drawable::create(make_system_painter(m_cParams))
+        custom_drawable::create(make_system_painter(m_cParams, m_cChasingData, T, m_cMaxTToDisplay, m_cDisplayHeatMapBool))
     }));
 
     m_cPlot.background = palette::brush();
+    m_cPlot.triple_buffered = true;
 
+    m_cPlot.RedrawBuffer();
+    m_cPlot.SwapBuffers();
     m_cPlot.RedrawWindow();
 
     return TRUE;  // return TRUE  unless you set the focus to a control
