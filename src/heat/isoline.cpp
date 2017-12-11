@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <array>
+#include <set>
 
 #include "model.h"
 
@@ -194,8 +195,15 @@ void model::find_isolines
     /* T0_k index => triangle */
     std::vector < std::pair < int, triangle > > stack;
 
-    /* [i][j][o] => contour id */
-    std::vector < std::vector < std::array < owning_type, 2 > > > visited(n);
+    /* [i][j][o] => < owning type, owner > */
+    std::vector
+    <
+        std::vector
+        <
+            std::array < std::pair < owning_type, std::set < int > >, 2 >
+        >
+    >
+    visited(n);
 
     std::vector < triangle > path;
 
@@ -203,7 +211,7 @@ void model::find_isolines
 
     for (size_t i = 0; i < n - 1; ++i)
     {
-        visited[i].resize(m, { owning_type::no, owning_type::no });
+        visited[i].resize(m);
         for (size_t j = 0; j < m - 1; ++j)
         {
             double max_T = max(max(T[i][j], T[i][j + 1]), max(T[i + 1][j], T[i + 1][j + 1]));
@@ -243,6 +251,7 @@ void model::find_isolines
 
     while (!stack.empty())
     {
+        size_t   Tk = std::get < 0 > (stack.back());
         double   T0 = std::get < 0 > (stack.back()) * dT;
         triangle t  = std::get < 1 > (stack.back());
         size_t  &i = t.i,
@@ -250,12 +259,20 @@ void model::find_isolines
 
         stack.pop_back();
 
-        if (visited[i][j][t.o] != owning_type::no) continue;
+        if (std::get < 0 > (visited[i][j][t.o]) != owning_type::no)
+        {
+            if (std::get < 1 > (visited[i][j][t.o]).find(Tk)
+                != std::get < 1 > (visited[i][j][t.o]).end())
+            {
+                continue;
+            }
+        }
 
         for (size_t c = current_contour; c == current_contour;)
         {
 
-            visited[i][j][t.o] = owning_type::our;
+            std::get < 0 > (visited[i][j][t.o]) = owning_type::our;
+            std::get < 1 > (visited[i][j][t.o]).insert(Tk);
 
             path.push_back(t);
 
@@ -265,15 +282,15 @@ void model::find_isolines
                 bool has_top  = is_in_range(T0, T[i][j], T[i][j + 1]);
                 bool has_diag = is_in_range(T0, T[i + 1][j], T[i][j + 1]);
 
-                if ((j > 0) && has_left && (visited[i][j - 1][1] != owning_type::our))
+                if ((j > 0) && has_left && (std::get < 0 > (visited[i][j - 1][1]) != owning_type::our))
                 {
                     t = { i, j - 1, 1 };
                 }
-                else if ((i > 0) && has_top && (visited[i - 1][j][1] != owning_type::our))
+                else if ((i > 0) && has_top && (std::get < 0 > (visited[i - 1][j][1]) != owning_type::our))
                 {
                     t = { i - 1, j, 1 };
                 }
-                else if (has_diag && (visited[i][j][1] != owning_type::our))
+                else if (has_diag && (std::get < 0 > (visited[i][j][1]) != owning_type::our))
                 {
                     t = { i, j, 1 };
                 }
@@ -288,15 +305,15 @@ void model::find_isolines
                 bool has_bottom = is_in_range(T0, T[i + 1][j], T[i + 1][j + 1]);
                 bool has_diag   = is_in_range(T0, T[i + 1][j], T[i][j + 1]);
 
-                if ((j + 2 < m) && has_right && (visited[i][j + 1][0] != owning_type::our))
+                if ((j + 2 < m) && has_right && (std::get < 0 > (visited[i][j + 1][0]) != owning_type::our))
                 {
                     t = { i, j + 1, 0 };
                 }
-                else if ((i + 2 < n) && has_bottom && (visited[i + 1][j][0] != owning_type::our))
+                else if ((i + 2 < n) && has_bottom && (std::get < 0 > (visited[i + 1][j][0]) != owning_type::our))
                 {
                     t = { i + 1, j, 0 };
                 }
-                else if (has_diag && (visited[i][j][0] != owning_type::our))
+                else if (has_diag && (std::get < 0 > (visited[i][j][0]) != owning_type::our))
                 {
                     t = { i, j, 0 };
                 }
@@ -316,7 +333,7 @@ void model::find_isolines
             size_t  &i0 = t0.i,
                     &j0 = t0.j;
 
-            visited[i0][j0][t0.o] = owning_type::their;
+            std::get < 0 > (visited[i0][j0][t0.o]) = owning_type::their;
 
             plot::point < size_t > p1, p2;
 
@@ -324,7 +341,7 @@ void model::find_isolines
             {
                 t = path[k];
 
-                visited[i][j][t.o] = owning_type::their;
+                std::get < 0 > (visited[i][j][t.o]) = owning_type::their;
 
                 if (k == 1)
                 {
