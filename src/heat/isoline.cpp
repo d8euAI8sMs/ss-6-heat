@@ -189,6 +189,7 @@ void model::find_isolines
     std::vector < std::vector < plot::point < double > > > & out,
     size_t n, size_t m,
     const parameters & p,
+    size_t max_isolines,
     size_t max_points_in_stack
 )
 {
@@ -209,14 +210,28 @@ void model::find_isolines
 
     /* Search for triangles intersected by isolines */
 
+    double global_max_T = (std::numeric_limits < double > :: lowest)();
+    double global_min_T = (std::numeric_limits < double > :: max)();
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        for (size_t j = 0; j < m; ++j)
+        {
+            if (global_max_T < T[i][j]) global_max_T = T[i][j];
+            if (global_min_T > T[i][j]) global_min_T = T[i][j];
+        }
+    }
+
+    global_max_T = min(global_max_T, global_min_T + dT * max_isolines);
+
     for (size_t i = 0; i < n - 1; ++i)
     {
         visited[i].resize(m);
         for (size_t j = 0; j < m - 1; ++j)
         {
-            double max_T = max(max(T[i][j], T[i][j + 1]), max(T[i + 1][j], T[i + 1][j + 1]));
+            double max_T = min(global_max_T, max(max(T[i][j], T[i][j + 1]), max(T[i + 1][j], T[i + 1][j + 1])));
             double min_T = min(min(T[i][j], T[i][j + 1]), min(T[i + 1][j], T[i + 1][j + 1]));
-            if (min_T != max_T)
+            if (min_T < max_T)
             {
                 int a = std::ceil(max_T / dT);
                 int b = std::floor(min_T / dT);

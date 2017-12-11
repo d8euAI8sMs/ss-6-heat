@@ -555,6 +555,7 @@ namespace model
         std::vector < std::vector < plot::point < double > > > & out,
         size_t n, size_t m,
         const parameters & p,
+        size_t max_isolines = 100,
         size_t max_points_in_stack = 100000
     );
 
