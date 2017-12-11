@@ -22,6 +22,9 @@ namespace model
 
         // other params
         double dt, dr, dz;
+
+        // material params
+        double c_l, k_l, c_m, k_m, c_h, k_h;
     };
 
     inline static parameters make_default_parameters()
