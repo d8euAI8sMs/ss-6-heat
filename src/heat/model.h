@@ -222,6 +222,9 @@ namespace model
         d.n = (size_t) std::ceil((p.R + p.d) / p.dr) + 1;
         d.m = (size_t) std::ceil((p.L + 2 * p.d) / p.dz) + 1;
 
+        d.area_map.clear();
+        d.heat_src.clear();
+
         d.area_map.resize(d.n, std::vector < material_t > (d.m));
         d.heat_src.resize(d.n, std::vector < double > (d.m));
 
