@@ -562,66 +562,74 @@ namespace model
         size_t max_points_in_stack = 100000
     );
 
-    inline static plot::painter_t make_system_painter(const parameters & params)
+    inline static plot::painter_t make_system_painter(const parameters & params,
+                                                      const chasing_data & d,
+                                                      const std::vector < std::vector < double > > & T,
+                                                      double & max_heat_value,
+                                                      bool & draw_heat_map)
     {
         return [&] (CDC & dc, const plot::viewport & vp)
         {
+            if (d.area_map.empty()) return;
+
             auto metal_brush       = plot::palette::brush(RGB(100, 100, 100));
             auto heat_source_brush = plot::palette::brush(RGB(100, 100, 100));
+            auto border_brush      = plot::palette::brush(RGB( 50,  50,  50));
+            auto heat_brush        = plot::palette::brush();
 
             RECT r;
 
-            // heat source
-            r = xyxy(vp,
-            {
-                params.z_h - params.L_h / 2,
-                params.z_h + params.L_h / 2,
-                0,
-                params.R_h
-            });
-            dc.FillRect(&r, heat_source_brush.get());
+            material_t m;
 
-            // ring
-            if (params.z_c > 0)
+            for (size_t i = 0; i < d.n; ++i)
             {
-                r = xyxy(vp,
+                for (size_t j = 0; j < d.m; ++j)
                 {
-                    params.z_c - params.L_c / 2,
-                    params.z_c + params.L_c / 2,
-                    params.R + params.d,
-                    params.R + params.d + params.d_c
-                });
-                dc.FillRect(&r, metal_brush.get());
+                    m = get_material_at(d, { (int) i, (int) j });
+
+                    if (m & material::ext) continue;
+
+                    if (m & (material::border | material::metal | material::heater))
+                    {
+                        r = xyxy(vp,
+                        {
+                            ((double)j - 0.5) * params.dz,
+                            ((double)j + 0.5) * params.dz,
+                            ((double)i - 0.5) * params.dr,
+                            ((double)i + 0.5) * params.dr
+                        });
+
+                        if (m & material::border)
+                        {
+                            dc.FillRect(&r, border_brush.get());
+                        }
+                        else if (m & material::metal)
+                        {
+                            dc.FillRect(&r, metal_brush.get());
+                        }
+                        else if (m & material::heater)
+                        {
+                            dc.FillRect(&r, heat_source_brush.get());
+                        }
+                    }
+
+                    if (draw_heat_map)
+                    {
+                        r = xyxy(vp,
+                        {
+                            ((double)j - 0.25) * params.dz,
+                            ((double)j + 0.25) * params.dz,
+                            ((double)i - 0.25) * params.dr,
+                            ((double)i + 0.25) * params.dr
+                        });
+
+                        heat_brush->DeleteObject();
+                        heat_brush->CreateSolidBrush(RGB(155 * max(0, min(1, T[i][j] / max_heat_value)), 0, 0));
+
+                        dc.FillRect(&r, heat_brush.get());
+                    }
+                }
             }
-
-            // metal
-
-            r = xyxy(vp,
-            {
-                0,
-                params.d,
-                0,
-                params.R
-            });
-            dc.FillRect(&r, metal_brush.get());
-
-            r = xyxy(vp,
-            {
-                params.L + params.d,
-                params.L + 2 * params.d,
-                0,
-                params.R
-            });
-            dc.FillRect(&r, metal_brush.get());
-
-            r = xyxy(vp,
-            {
-                0,
-                params.L + 2 * params.d,
-                params.R,
-                params.R + params.d
-            });
-            dc.FillRect(&r, metal_brush.get());
         };
     }
 }
