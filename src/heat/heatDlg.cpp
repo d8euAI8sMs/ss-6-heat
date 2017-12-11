@@ -74,6 +74,10 @@ BOOL CHeatDlg::OnInitDialog()
     // TODO: Add extra initialization here
 
     adjust(m_cParams, m_cPlotData);
+    make_chasing_data(m_cChasingData, m_cParams);
+    T.clear();
+    T.resize(m_cChasingData.n, std::vector < double > (m_cChasingData.m));
+
     m_cPlot.plot_layer.with(make_root_drawable(m_cPlotData, {
         custom_drawable::create(make_system_painter(m_cParams))
     }));

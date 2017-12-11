@@ -37,6 +37,8 @@ public:
     PlotStatic m_cPlot;
     model::parameters m_cParams;
     model::plot_data m_cPlotData;
+    model::chasing_data m_cChasingData;
+    std::vector < std::vector < double > > T;
     int m_cIsotermsToDisplay;
     double m_cMaxTToDisplay;
     BOOL m_cDisplayHeatMap;
