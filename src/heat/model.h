@@ -27,6 +27,9 @@ namespace model
 
         // material params
         double c_l, k_l, c_m, k_m, c_h, k_h;
+
+        // ext params
+        double sigma;
     };
 
     inline static parameters make_default_parameters()
@@ -46,7 +49,10 @@ namespace model
             0.3, 0, 0,
 
             // material params
-            1000, 0.6, 450, 92, 450, 12
+            1000, 0.6, 450, 92, 450, 12,
+
+            // ext params
+            1e-8
         };
     }
 
