@@ -42,6 +42,7 @@ public:
     std::vector < std::vector < double > > T;
     int m_cIsotermsToDisplay;
     double m_cMaxTToDisplay;
+    double m_cdT;
     BOOL m_cDisplayHeatMap;
     bool m_cDisplayHeatMapBool;
     afx_msg void OnBnClickedCheck1();

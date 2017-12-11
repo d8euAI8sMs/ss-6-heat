@@ -46,7 +46,7 @@ namespace model
             30, 15, 50, 1000,
 
             // other params
-            0.3, 0, 0,
+            0.3, 2.5, 2.5,
 
             // material params
             1000, 0.6, 450, 92, 450, 12,
@@ -89,7 +89,6 @@ namespace model
         {
             data.world->ymax += params.d_c;
         }
-        params.dr = params.dz = min(params.d_c, params.d) / 2;
     }
 
     inline static plot::drawable::ptr_t make_root_drawable

@@ -24,6 +24,7 @@ CHeatDlg::CHeatDlg(CWnd* pParent /*=NULL*/)
     , m_cPlotData(make_plot_data())
     , m_cIsotermsToDisplay(10)
     , m_cMaxTToDisplay(100)
+    , m_cdT(10)
     , m_cDisplayHeatMap(TRUE)
     , m_cDisplayHeatMapBool(true)
 {
@@ -45,6 +46,9 @@ void CHeatDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT8, m_cParams.L_c);
     DDX_Text(pDX, IDC_EDIT9, m_cParams.z_c);
     DDX_Text(pDX, IDC_EDIT10, m_cParams.dt);
+    DDX_Text(pDX, IDC_EDIT15, m_cParams.dr);
+    DDX_Text(pDX, IDC_EDIT16, m_cParams.dz);
+    DDX_Text(pDX, IDC_EDIT17, m_cdT);
     DDX_Text(pDX, IDC_EDIT11, m_cParams.lambda_m);
     DDX_Text(pDX, IDC_EDIT13, m_cIsotermsToDisplay);
     DDX_Text(pDX, IDC_EDIT14, m_cMaxTToDisplay);
@@ -157,7 +161,7 @@ void CHeatDlg::OnSimulation()
     {
         chasing_solve(d, m_cParams, T);
         m_cPlotData.data->clear();
-        find_isolines(T, 10, *m_cPlotData.data, d.n, d.m, m_cParams, make_material_based_stencil(d), m_cIsotermsToDisplay);
+        find_isolines(T, m_cdT, *m_cPlotData.data, d.n, d.m, m_cParams, make_material_based_stencil(d), m_cIsotermsToDisplay);
         m_cPlot.RedrawBuffer();
         m_cPlot.SwapBuffers();
         Invoke([&] () { m_cPlot.RedrawWindow(); });
