@@ -85,7 +85,7 @@ namespace model
         data.world->xmin = data.world->ymin = 0;
         data.world->xmax = params.L + 2 * params.d;
         data.world->ymax = params.R + params.d;
-        if (params.z_c > 0)
+        if ((params.z_c != 0) && (params.L_c != 0) && (params.d_c != 0))
         {
             data.world->ymax += params.d_c;
         }
@@ -224,7 +224,9 @@ namespace model
 
     inline void make_chasing_data(chasing_data & d, const parameters & p)
     {
-        d.n = (size_t) std::ceil((p.R + p.d + p.d_c) / p.dr) + 1;
+        bool has_ring = (p.z_c != 0) && (p.d_c != 0) && (p.L_c != 0);
+
+        d.n = (size_t) std::ceil((p.R + p.d + (has_ring ? p.d_c : 0)) / p.dr) + 1;
         d.m = (size_t) std::ceil((p.L + 2 * p.d) / p.dz) + 1;
 
         d.area_map.clear();
@@ -239,9 +241,9 @@ namespace model
         size_t h_j1 = (size_t) std::ceil((p.z_h - p.L_h / 2) / p.dz);
         size_t h_j2 = (size_t) std::ceil((p.z_h + p.L_h / 2) / p.dz);
         size_t h_n  = (size_t) std::ceil(p.R_h / p.dr);
-        size_t c_j1 = (size_t) std::ceil((p.z_c - p.L_h / 2) / p.dz);
-        size_t c_j2 = (size_t) std::ceil((p.z_c + p.L_h / 2) / p.dz);
-        size_t c_n  = (size_t) std::ceil(p.d_c / p.dr);
+        size_t c_j1 = (!has_ring) ? 0 : (size_t) std::ceil((p.z_c - p.L_h / 2) / p.dz);
+        size_t c_j2 = (!has_ring) ? 0 : (size_t) std::ceil((p.z_c + p.L_h / 2) / p.dz);
+        size_t c_n  = (!has_ring) ? 0 : (size_t) std::ceil(p.d_c / p.dr);
 
         // set up materials and sketch out borders
 
