@@ -248,7 +248,7 @@ namespace model
             {
                 bool is_border        = ((i == 0) || ((i + 1) == d.n)
                                       || (j == 0) || ((j + 1) == d.m));
-                bool is_heater        = is_in_rect({ i, j }, { 0, h_n, h_j1, h_j2 });// && !((i == h_n) && ((j == h_j1) || (j == h_j2)));
+                bool is_heater        = is_in_rect({ i, j }, { 0, h_n, h_j1, h_j2 });
                 bool is_heater_border = is_heater && !is_in_rect({ i, j }, { 1, h_n - 1, h_j1 + 1, h_j2 - 1 });
                 bool is_liquid        = is_in_rect({ i, j }, { 0, d.n - d_n - 1, d_m, d.m - d_m - 1 });
                 bool is_liquid_border = is_liquid && !is_in_rect({ i, j }, { 1, d.n - d_n - 2, d_m + 1, d.m - d_m - 2 });
