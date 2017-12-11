@@ -558,7 +558,7 @@ namespace model
         size_t max_points_in_stack = 100000
     );
 
-    inline static plot::painter_t make_system_painter(parameters & params)
+    inline static plot::painter_t make_system_painter(const parameters & params)
     {
         return [&] (CDC & dc, const plot::viewport & vp)
         {
