@@ -241,8 +241,8 @@ namespace model
         size_t h_j1 = (size_t) std::ceil((p.z_h - p.L_h / 2) / p.dz);
         size_t h_j2 = (size_t) std::ceil((p.z_h + p.L_h / 2) / p.dz);
         size_t h_n  = (size_t) std::ceil(p.R_h / p.dr);
-        size_t c_j1 = (!has_ring) ? 0 : (size_t) std::ceil((p.z_c - p.L_h / 2) / p.dz);
-        size_t c_j2 = (!has_ring) ? 0 : (size_t) std::ceil((p.z_c + p.L_h / 2) / p.dz);
+        size_t c_j1 = (!has_ring) ? 0 : (size_t) std::ceil((p.z_c - p.L_c / 2) / p.dz);
+        size_t c_j2 = (!has_ring) ? 0 : (size_t) std::ceil((p.z_c + p.L_c / 2) / p.dz);
         size_t c_n  = (!has_ring) ? 0 : (size_t) std::ceil(p.d_c / p.dr);
 
         // set up materials and sketch out borders
